@@ -1,0 +1,125 @@
+# Advanced Multi-Camera, Multi-Analyzer Configuration for Roxy
+
+# Camera Configuration
+cameras:
+  living_room:
+    url: ${CAMERA_LIVING_ROOM_URL}
+    location: inside
+    enabled: true
+
+  kitchen:
+    url: ${CAMERA_KITCHEN_URL}
+    location: inside
+    enabled: true
+
+  backyard:
+    url: ${CAMERA_BACKYARD_URL}
+    location: outside
+    enabled: true
+
+# Motion Detection Settings
+motion_detection:
+  threshold: 1000
+  window_minutes: 10
+
+# Processing Settings
+processing:
+  fps: 1  # Frames per second to analyze with LLM
+
+# LLM Configuration
+llm:
+  api_key: ${ANTHROPIC_API_KEY}
+  model: claude-3-5-sonnet-20241022
+
+# Analyzer Configuration
+analyzers:
+  # Bathroom behavior detection
+  - type: bathroom_detection
+    enabled: true
+    prompt: |
+      Analyze this image of a dog and determine if the dog is showing signs that they need to go to the bathroom.
+
+      Look for these behavioral cues:
+      1. Pacing or circling near the door
+      2. Whining or barking at the door
+      3. Sniffing around looking for a spot
+      4. Restlessness or agitation
+      5. Squatting or attempting to relieve themselves
+      6. Standing by the door looking expectant
+      7. Scratching at the door
+
+      Respond with a JSON object:
+      {
+        "needs_bathroom": true/false,
+        "confidence": 0-100,
+        "behaviors_observed": ["behavior1", "behavior2"],
+        "recommendation": "what action to take"
+      }
+    confidence_threshold: 60
+
+  # Dog presence detection
+  - type: presence_detection
+    enabled: true
+    check_interval_seconds: 60
+    prompt: |
+      Analyze this image and identify all dogs present.
+
+      For each dog, note:
+      - Approximate location in frame
+      - Activity (sleeping, playing, sitting, etc.)
+      - Any identifying features if multiple dogs
+
+      Respond with JSON:
+      {
+        "dogs_present": ["dog_1", "dog_2"],
+        "count": 2,
+        "confidence": 0-100,
+        "details": {
+          "dog_1": {"activity": "sleeping", "location": "couch"},
+          "dog_2": {"activity": "sitting", "location": "floor"}
+        }
+      }
+    confidence_threshold: 50
+
+  # Time-based alert: Dogs not seen inside
+  - type: time_based_alert
+    enabled: true
+    condition: "dogs_not_inside"
+    location: inside
+    time_threshold_minutes: 60
+    required_dogs: 2
+    description: "Alert if both dogs not confirmed inside for 60+ minutes"
+
+# Notification Configuration
+notifications:
+  twilio:
+    account_sid: ${TWILIO_ACCOUNT_SID}
+    auth_token: ${TWILIO_AUTH_TOKEN}
+    from_number: ${TWILIO_FROM_NUMBER}
+    to_numbers:
+      - ${TWILIO_TO_NUMBER_1}
+      # Add more numbers as needed
+      # - ${TWILIO_TO_NUMBER_2}
+
+  # Alert routing
+  alert_routing:
+    bathroom_detection:
+      use_sms: true
+      use_call: false
+      priority: high
+
+    time_based_alert:
+      use_sms: true
+      use_call: true  # Call for this one - more urgent
+      priority: high
+
+    presence_detection:
+      use_sms: false
+      use_call: false
+      priority: normal  # Just log, don't alert
+
+# Logging
+logging:
+  level: INFO
+  save_alert_images: true
+  alert_image_directory: ./alerts

@@ -1,0 +1,38 @@
+[Unit]
+Description=Roxy Dog Monitor Service
+After=network.target docker.service
+Wants=docker.service
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+Group=YOUR_USERNAME
+WorkingDirectory=/home/YOUR_USERNAME/bootstrap/Roxy
+
+# Environment file
+EnvironmentFile=/home/YOUR_USERNAME/bootstrap/Roxy/.env
+
+# Main process
+ExecStart=/usr/bin/python3 /home/YOUR_USERNAME/bootstrap/Roxy/roxy_monitor.py
+
+# Restart policy
+Restart=on-failure
+RestartSec=30s
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=roxy
+
+# Security options
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Resource limits
+MemoryLimit=1G
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target
