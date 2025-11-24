@@ -14,6 +14,7 @@ services:
     environment:
       - WYZE_EMAIL=${WYZE_EMAIL}
       - WYZE_PASSWORD=${WYZE_PASSWORD}
+      - TOTP_KEY=${TOTP_KEY}                    # Required if 2FA enabled
       - QUALITY=${WYZE_QUALITY:-HD120}
       - SNAPSHOT=${WYZE_SNAPSHOT:-API}
       - ON_DEMAND=${WYZE_ON_DEMAND:-False}
