@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Wyze Bridge - Converts Wyze cameras to RTSP streams
+  wyze-bridge:
+    image: mrlt8/wyze-bridge:latest
+    container_name: wyze-bridge
+    restart: unless-stopped
+    ports:
+      - "8554:8554"    # RTSP
+      - "8888:8888"    # Web UI (optional)
+      - "8889:8889"    # WebRTC
+      - "5000:5000"    # API
+    environment:
+      - WYZE_EMAIL=${WYZE_EMAIL}
+      - WYZE_PASSWORD=${WYZE_PASSWORD}
+      - QUALITY=${WYZE_QUALITY:-HD120}
+      - SNAPSHOT=${WYZE_SNAPSHOT:-API}
+      - ON_DEMAND=${WYZE_ON_DEMAND:-False}
+      - LLHLS=${WYZE_LLHLS:-True}
+    volumes:
+      - wyze-bridge-data:/config
+    networks:
+      - roxy-network
+
+  # Roxy Monitor - Dog monitoring system (optional Docker version)
+  # Note: For production, recommend running as systemd service instead
+  # Uncomment below to run Roxy in Docker:
+
+  # roxy:
+  #   build:
+  #     context: ..
+  #     dockerfile: deployment/Dockerfile
+  #   container_name: roxy-monitor
+  #   restart: unless-stopped
+  #   environment:
+  #     - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+  #     - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+  #     - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+  #     - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER}
+  #     - TWILIO_TO_NUMBER_1=${TWILIO_TO_NUMBER_1}
+  #     - CAMERA_LIVING_ROOM_URL=rtsp://wyze-bridge:8554/living-room
+  #     - CAMERA_KITCHEN_URL=rtsp://wyze-bridge:8554/kitchen
+  #     - CAMERA_BACKYARD_URL=rtsp://wyze-bridge:8554/backyard
+  #   volumes:
+  #     - ../config_advanced.yaml:/app/config_advanced.yaml:ro
+  #     - roxy-alerts:/app/alerts
+  #   depends_on:
+  #     - wyze-bridge
+  #   networks:
+  #     - roxy-network
+
+volumes:
+  wyze-bridge-data:
+  # roxy-alerts:
+
+networks:
+  roxy-network:
+    driver: bridge
